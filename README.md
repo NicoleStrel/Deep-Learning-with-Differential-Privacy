@@ -9,4 +9,4 @@ This project serves as an introduction to reading ML literature, and then applyi
 ### Team Members
 
 - Nicole Streltsov ([@NicoleStrel](https://github.com/NicoleStrel))
-- 
+- Ritvik Jayanthi ([@RitvikJayanthi](https://github.com/Ritvik123487))
