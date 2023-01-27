@@ -13,3 +13,4 @@ This project serves as an introduction to reading ML literature, and then applyi
 - Alec Dong ([@AlecDong](https://github.com/AlecDong))
 - Ria Upreti ([@ria-upreti](https://github.com/ria-upreti))
 - Akriti Sharma ([@Akriti-Sharma1](https://github.com/Akriti-Sharma1))
+- Daniel Montero ([@danielfmontero](https://github.com/danielfmontero))
