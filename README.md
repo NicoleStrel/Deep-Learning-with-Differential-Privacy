@@ -11,6 +11,7 @@ This project serves as an introduction to reading ML literature, and then applyi
 - Nicole Streltsov ([@NicoleStrel](https://github.com/NicoleStrel))
 - Ritvik Jayanthi ([@RitvikJayanthi](https://github.com/Ritvik123487))
 - Alec Dong ([@AlecDong](https://github.com/AlecDong))
+- Victor Gasnikov ([@VictorGasnikov](https://github.com/VictorGasnikov))
 - Ria Upreti ([@ria-upreti](https://github.com/ria-upreti))
 - Akriti Sharma ([@Akriti-Sharma1](https://github.com/Akriti-Sharma1))
 - Daniel Montero ([@danielfmontero](https://github.com/danielfmontero))
