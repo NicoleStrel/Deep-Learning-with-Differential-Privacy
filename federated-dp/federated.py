@@ -99,9 +99,7 @@ if __name__ == '__main__':
 	print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
 
 	# PLOTTING
-	import matplotlib
 	import matplotlib.pyplot as plt
-	matplotlib.use('Agg')
 
 	# Plot Loss curve
 	plt.figure()
@@ -114,7 +112,7 @@ if __name__ == '__main__':
 	# Plot Average Accuracy vs Communication rounds
 	plt.figure()
 	plt.title('Average Accuracy vs Communication rounds')
-	plt.plot(range(len(train_accuracy)), train_accuracy, color='k')
+	plt.plot(range(len(train_accuracy)), train_accuracy, color='b')
 	plt.ylabel('Average Accuracy')
 	plt.xlabel('Communication Rounds')
 	plt.show()
