@@ -25,7 +25,59 @@ def convert_to_np_arrays(tf_ds):
 
     return final_x, final_y
 
-def get_dataset_np_arrays(directory, classifications, size, val_split):
+def count_num_classes(ds):
+    '''
+    Counts the number of classes in a tenorflow dataset
+    @return int counts
+    '''
+    # get labels
+    labels_np = np.array(list(ds.map(lambda x, y: y).as_numpy_iterator()))
+
+    # use np.unique to find counts
+    counts = {label: count for label, count in zip(*np.unique(labels_np, return_counts=True))}
+
+    print("num classes --->", counts)
+    return counts
+
+def augment_data(image, label):
+    '''
+    Lambda function that data augments the provided images. Does the following physical tranformations randomly:
+        - flips horizontally
+        - flips vertically 
+        - rotates 0, 90, 180 or 360 degrees (one of)
+    '''
+    image = tf.image.random_flip_left_right(image)
+    image = tf.image.rot90(image, k=tf.random.uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))
+    image = tf.image.random_flip_up_down(image)
+    return image, label
+
+def extend_dataset(ds):
+    '''
+    Ensures that the dataset is balanced - ie. each label has enough data points to compare with each other. 
+
+    @param tensorflow ds
+    @return tensorflow ds
+    '''
+
+    print("length of original -->", len(list(ds)))
+    original_size = len(list(ds))
+    counts = count_num_classes(ds)
+    max_samples = max(counts.values())
+
+    for label, count in counts.items(): #loop through (to work on different # of classes)
+        dataset_extend = ds.filter(lambda x, y: tf.equal(y, label))
+        dataset_extend = dataset_extend.repeat((max_samples - count) // count + 1)
+        dataset_extend = dataset_extend.map(augment_data, num_parallel_calls=tf.data.experimental.AUTOTUNE) #parallize image augmentation
+        dataset_extend = dataset_extend.take(max_samples - count)
+        ds = ds.concatenate(dataset_extend)
+    ds = ds.shuffle(buffer_size=original_size, seed=1)
+
+    print("length of augmented dataset -->", len(list(ds)))
+    count_num_classes(ds)
+
+    return ds
+
+def get_dataset_np_arrays(directory, classifications, size, val_split, data_augment = False):
     '''
     Gets the numpy arrays of the dataset for train, test, and validation sets. 
     It splits the data via 80%:10%:10% split (train:val:test)
@@ -58,6 +110,9 @@ def get_dataset_np_arrays(directory, classifications, size, val_split):
         validation_split=val_split,
         subset="training",
     )
+
+    if data_augment:
+        train_ds = extend_dataset(train_ds)
 
     # get the validation data - temporarly 20%, as we will split it into test in the next step
     val_ds = tf.keras.utils.image_dataset_from_directory(
@@ -116,7 +171,7 @@ if __name__ == '__main__':
 
     # parameters
     which_dataset = "chest"
-    size = (256, 256)
+    size = (64, 64)
     val_split = 0.2
     classifications = [] #order of numerical labels (starting from 0)
     directory = '' # path where image files are located
@@ -127,9 +182,10 @@ if __name__ == '__main__':
 
         classifications = ["NORMAL", "PNEUMONIA"]
         directory = 'chest_xray'
-        folder_to_save = "chest-data"
+        folder_to_save = "chest-data-new"
+        data_augment = True
 
-        x_train, x_val, x_test, y_train, y_val, y_test = get_dataset_np_arrays(directory, classifications, size, val_split)
+        x_train, x_val, x_test, y_train, y_val, y_test = get_dataset_np_arrays(directory, classifications, size, val_split, data_augment)
         dump_to_pickle_files(folder_to_save, which_dataset, x_train, x_val, x_test, y_train, y_val, y_test)
 
     elif which_dataset == "knee":
