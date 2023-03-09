@@ -31,6 +31,9 @@ class LocalUpdate(object):
 		self.device = 'cuda' if cuda else 'cpu'
 		# Default criterion set to NLL loss function
 		self.criterion = nn.NLLLoss().to(self.device)
+		self.g = []
+		self.C = 70
+		self.sigma = 4
 
 	def train_val_test(self, dataset, idxs):
 		"""
@@ -55,20 +58,30 @@ class LocalUpdate(object):
 		model.train()
 		epoch_loss = []
 
-		# Set optimizer for the local updates
-		optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
-									 weight_decay=1e-4)
-
 		for iter in range(self.epochs):
 			batch_loss = []
-			for batch_idx, (images, labels) in enumerate(self.trainloader):
-				images, labels = images.to(self.device), labels.to(self.device)
 
-				model.zero_grad()
-				log_probs = model(images)
-				loss = self.criterion(log_probs, labels)
-				loss.backward()
-				optimizer.step()
+			for batch_idx, batch in enumerate(self.trainloader):
+				images, labels = batch
+
+				for image, label in zip(images, labels):
+					image, label = image.to(self.device), label.to(self.device)
+					model.zero_grad()
+					log_probs = model(image)
+					loss = self.criterion(log_probs, label.unsqueeze(0))
+					loss.backward()
+
+					for param in model.parameters():
+						# add unclipped gradients to list (used to compute C)
+						self.g.append(param.grad.detach().clone())
+						grad = self.g[-1]
+						# clip gradients
+						norm = torch.norm(grad)
+						grad_clipped = grad / max(1, norm / self.C)
+						grad_clipped += torch.normal(0, self.sigma * self.C, size=grad_clipped.shape)
+						param.grad = grad_clipped
+						# update weights
+						param = param - self.lr * param.grad
 
 				if batch_idx % 10 == 0:
 					print('| Global Round : {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
