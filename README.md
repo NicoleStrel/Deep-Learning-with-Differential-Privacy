@@ -16,6 +16,7 @@ This project serves as an introduction to reading ML literature, and then applyi
 - Daniel Montero ([@danielfmontero](https://github.com/danielfmontero))
 - Bolade Amoussou ([@cdw18](https://github.com/cdw18))
 - Mikhael Orteza ([@xPreliator](https://github.com/xPreliator))
+- Divya Gupta ([@gdivyagupta](https://github.com/gdivyagupta))
 
 ### Contents 
 
