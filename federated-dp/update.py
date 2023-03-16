@@ -20,8 +20,8 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-	def __init__(self, cuda, dataset, idxs, logger, batch_size=10, lr=0.01, 
-				 epochs=10):
+	def __init__(self, cuda, dataset, idxs, logger, batch_size=32, lr=0.005, 
+				 epochs=20):
 		self.logger = logger
 		self.batch_size = batch_size
 		self.lr = lr
@@ -29,10 +29,8 @@ class LocalUpdate(object):
 		self.trainloader, self.validloader, self.testloader = self.train_val_test(
 			dataset, list(idxs))
 		self.device = 'cuda' if cuda else 'cpu'
-		# Default criterion set to NLL loss function
-		self.criterion = nn.NLLLoss().to(self.device)
-		self.g = []
-		self.C = 70
+		self.criterion = nn.CrossEntropyLoss().to(self.device)
+		self.C = 35
 		self.sigma = 4
 
 	def train_val_test(self, dataset, idxs):
@@ -57,6 +55,7 @@ class LocalUpdate(object):
 		# Set mode to train model
 		model.train()
 		epoch_loss = []
+		g = []
 
 		for iter in range(self.epochs):
 			batch_loss = []
@@ -72,16 +71,15 @@ class LocalUpdate(object):
 					loss.backward()
 
 					for param in model.parameters():
-						# add unclipped gradients to list (used to compute C)
-						self.g.append(param.grad.detach().clone())
-						grad = self.g[-1]
+						grad = param.grad.detach().clone()
 						# clip gradients
 						norm = torch.norm(grad)
+						g.append(norm.item())
 						grad_clipped = grad / max(1, norm / self.C)
-						grad_clipped += torch.normal(0, self.sigma * self.C, size=grad_clipped.shape)
-						param.grad = grad_clipped
+						# add Gaussian noise
+						grad_clipped += torch.normal(0, self.sigma, size=grad_clipped.shape)
 						# update weights
-						param = param - self.lr * param.grad
+						param.data.add_(-self.lr, grad_clipped)
 
 				if batch_idx % 10 == 0:
 					print('| Global Round : {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -91,7 +89,7 @@ class LocalUpdate(object):
 				self.logger.add_scalar('loss', loss.item())
 				batch_loss.append(loss.item())
 			epoch_loss.append(sum(batch_loss)/len(batch_loss))
-
+		print("***********************************************",sum(g)/len(g))
 		return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
 	def inference(self, model):

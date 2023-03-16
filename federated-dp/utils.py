@@ -3,6 +3,26 @@ import torch
 from torchvision import datasets, transforms
 from sampling import cifar_iid, cifar_noniid
 
+# TODO: use chest x-ray dataset from https://github.com/NicoleStrel/Deep-Learning-with-Differential-Privacy
+
+import pickle
+import gzip
+import os
+
+path = 'chest-data' #os.path.join(os.path.dirname(os.getcwd()), 'chest-data')
+
+with gzip.open(os.path.join(path, 'chest_x_train.gz'), 'rb') as i:
+    x_train = pickle.load(i)
+with gzip.open(os.path.join(path, 'chest_x_val.gz'), 'rb') as i:
+    x_valid = pickle.load(i)    
+with gzip.open(os.path.join(path, 'chest_x_test.gz'), 'rb') as i:
+    x_test = pickle.load(i)  
+with gzip.open(os.path.join(path, 'chest_y_train.gz'), 'rb') as i:
+    y_train = pickle.load(i)  
+with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
+    y_valid = pickle.load(i) 
+with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
+    y_test = pickle.load(i)
 
 def get_dataset(iid : bool, num_users : int):
 	""" Returns train and test datasets and a user group which is a dict where

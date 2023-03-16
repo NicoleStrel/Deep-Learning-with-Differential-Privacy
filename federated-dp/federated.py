@@ -14,8 +14,8 @@ if __name__ == '__main__':
 	cuda = False
 	num_users = 100
 	frac = 0.1
-	global_epochs = 10
-	local_epochs = 10
+	global_epochs = 20
+	local_epochs = 20
 
 	# define paths
 	path_project = os.path.abspath('..')
@@ -55,9 +55,7 @@ if __name__ == '__main__':
 
 		for idx in idxs_users:
 			local_model = LocalUpdate(cuda=cuda, dataset=train_dataset,
-									  idxs=user_groups[idx], logger=logger,
-									  batch_size=10, lr=0.01, 
-									  epochs=local_epochs)
+									  idxs=user_groups[idx], logger=logger)
 			w, loss = local_model.update_weights(
 				model=copy.deepcopy(global_model), global_round=epoch)
 			local_weights.append(copy.deepcopy(w))
