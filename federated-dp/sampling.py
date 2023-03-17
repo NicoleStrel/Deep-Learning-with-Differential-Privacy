@@ -2,7 +2,7 @@ import numpy as np
 
 def cifar_iid(dataset, num_users):
 	"""
-	Sample I.I.D. client data from CIFAR10 dataset
+	Sample I.I.D. client data
 	:param dataset:
 	:param num_users:
 	:return: dict of image index
@@ -18,7 +18,7 @@ def cifar_iid(dataset, num_users):
 
 def cifar_noniid(dataset, num_users):
 	"""
-	Sample non-I.I.D client data from CIFAR10 dataset
+	Sample non-I.I.D client data
 	:param dataset:
 	:param num_users:
 	:return:

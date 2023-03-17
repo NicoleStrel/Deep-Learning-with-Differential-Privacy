@@ -5,17 +5,17 @@ import numpy as np
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 from update import LocalUpdate, test_inference
-from models import CNNCifar
+from models import CNN
 from utils import get_dataset, average_weights
 
 
 if __name__ == '__main__':
 	start_time = time.time()
 	cuda = False
-	num_users = 100
+	num_users = 10
 	frac = 0.1
-	global_epochs = 20
-	local_epochs = 20
+	global_epochs = 10
+	local_epochs = 10
 
 	# define paths
 	path_project = os.path.abspath('..')
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 														   num_users=num_users)
 
 	# BUILD MODEL
-	global_model = CNNCifar(num_classes=10)
+	global_model = CNN(num_classes=2)
 
 	# Set the model to train and send it to device.
 	global_model.to(device)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 	train_loss, train_accuracy = [], []
 	val_acc_list, net_list = [], []
 	cv_loss, cv_acc = [], []
-	print_every = 2
+	print_every = 1
 	val_loss_pre, counter = 0, 0
 
 	for epoch in tqdm(range(global_epochs)):

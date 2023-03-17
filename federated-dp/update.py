@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -20,7 +21,7 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-	def __init__(self, cuda, dataset, idxs, logger, batch_size=32, lr=0.005, 
+	def __init__(self, cuda, dataset, idxs, logger, batch_size=10, lr=0.005, 
 				 epochs=20):
 		self.logger = logger
 		self.batch_size = batch_size
@@ -30,7 +31,7 @@ class LocalUpdate(object):
 			dataset, list(idxs))
 		self.device = 'cuda' if cuda else 'cpu'
 		self.criterion = nn.CrossEntropyLoss().to(self.device)
-		self.C = 35
+		self.C = 70
 		self.sigma = 4
 
 	def train_val_test(self, dataset, idxs):
@@ -46,9 +47,9 @@ class LocalUpdate(object):
 		trainloader = DataLoader(DatasetSplit(dataset, idxs_train),
 								 batch_size=self.batch_size, shuffle=True)
 		validloader = DataLoader(DatasetSplit(dataset, idxs_val),
-								 batch_size=int(len(idxs_val)/10), shuffle=False)
+								 batch_size=min(1, int(len(idxs_val)/10)), shuffle=False)
 		testloader = DataLoader(DatasetSplit(dataset, idxs_test),
-								batch_size=int(len(idxs_test)/10), shuffle=False)
+								batch_size=min(1, int(len(idxs_test)/10)), shuffle=False)
 		return trainloader, validloader, testloader
 
 	def update_weights(self, model, global_round):
@@ -66,8 +67,8 @@ class LocalUpdate(object):
 				for image, label in zip(images, labels):
 					image, label = image.to(self.device), label.to(self.device)
 					model.zero_grad()
-					log_probs = model(image)
-					loss = self.criterion(log_probs, label.unsqueeze(0))
+					out = model(image)
+					loss = self.criterion(out, label.unsqueeze(0))
 					loss.backward()
 
 					for param in model.parameters():
@@ -108,8 +109,8 @@ class LocalUpdate(object):
 			loss += batch_loss.item()
 
 			# Prediction
-			_, pred_labels = torch.max(outputs, 1)
-			pred_labels = pred_labels.view(-1)
+			_, pred_labels = torch.max(F.softmax(outputs, dim=1), 1)
+			_, labels = torch.max(labels, 1)
 			correct += torch.sum(torch.eq(pred_labels, labels)).item()
 			total += len(labels)
 
@@ -125,20 +126,20 @@ def test_inference(cuda, model, test_dataset):
 	loss, total, correct = 0.0, 0.0, 0.0
 
 	device = 'cuda' if cuda else 'cpu'
-	criterion = nn.NLLLoss().to(device)
+	criterion = nn.CrossEntropyLoss().to(device)
 	testloader = DataLoader(test_dataset, batch_size=128, shuffle=False)
 
 	for batch_idx, (images, labels) in enumerate(testloader):
 		images, labels = images.to(device), labels.to(device)
 
 		# Inference
-		outputs = model(images)
+		outputs = F.softmax(model(images), dim=1)
 		batch_loss = criterion(outputs, labels)
 		loss += batch_loss.item()
 
 		# Prediction
 		_, pred_labels = torch.max(outputs, 1)
-		pred_labels = pred_labels.view(-1)
+		_, labels = torch.max(labels, 1)
 		correct += torch.sum(torch.eq(pred_labels, labels)).item()
 		total += len(labels)
 
