@@ -6,7 +6,7 @@ Data downloaded from https://www.kaggle.com/datasets/shashwatwork/knee-osteoarth
 
 **Notes:**
  - 80% train, 10% validation, 10% test data split
- - 9786 images total, 3083 - normal, 1408 - doubtful, 2074 - minimal, 1032 - moderate, 232 - severe
+ - 9786 images total, 3857 - normal, 1770 - doubtful, 2578 - minimal, 1286 - moderate, 295 - severe
  - image crops to (64, 64)
  - rgb colour mode
  - final compressed pickle file stores numpy arrays
