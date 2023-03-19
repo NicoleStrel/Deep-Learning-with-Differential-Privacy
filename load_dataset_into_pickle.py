@@ -190,6 +190,13 @@ if __name__ == '__main__':
 
     elif which_dataset == "knee":
         print("loading the knee dataset ...")
-
+        
+        classifications = ["NORMAL", "DOUBTFUL", "MINIMAL", "MODERATE", "SEVERE"]
+        directory = 'knee_xray'
+        folder_to_save = "knee-data-new"
+        data-augment = True
+        
+        x_train, x_val, x_test, y_train, y_val, y_test = get_dataset_np_arrays(directory, classifications, size, val_split, data_augment)
+        dump_to_pickle_files(folder_to_save, which_dataset, x_train, x_val, x_test, y_train, y_val, y_test)
     else:
         print ("choose a datset from: 'chest' or 'knee'")
