@@ -4,24 +4,24 @@ from tensorflow_privacy.privacy.analysis import compute_dp_sgd_privacy_lib
 
 # written by Nicole Streltsov, Ritvik Jayanthi and Akriti Sharma March 2023
 
-def get_memory_usage_and_runtime(train_function, a, b):
+def get_memory_usage_and_runtime(train_function, arguments):
     '''
     gets peak memory usage of the training function in MB and runtime in seconds
     
     @param train_function: the model's training loop
-    @param a, b ... etc : arguments for the function
-    @return runtime (s), peak_mem (MB)
+    @param arguments: tuple of arguments for the function
+    @return runtime (s), peak_mem (MB), result (return of the function)
 
     NOTE - if the function has no return values or arguments, run it like this: 
     mem = memory_usage(proc=train_function)
     '''
 
     s = time.time()
-    mem, result = memory_usage((train_function, (a, b)), retval=True)
+    mem, result = memory_usage((train_function, arguments), retval=True)
     e = time.time()
     runtime = e-s
     peak_mem = max(mem)
-
+    
     return runtime, peak_mem, result
 
 
