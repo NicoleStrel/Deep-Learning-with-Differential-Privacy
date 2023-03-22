@@ -4,7 +4,7 @@
 
 ### Objective
 
-This project serves as an introduction to reading ML literature, and then applying this knowledge to deep learning and differential privacy concerns. The goal of this project is to understand deep learning models and how to protect the privacy of individual’s data. Different algorithmic techniques for learning will be implemented on medical image datasets and an analysis of privacy costs within the framework of differential privacy will be completed to evaluate the merits and room for improvement of different techniques. This project deliverable will be a research paper summarizing the results found throughout the fall and winter semester.
+This project serves as an introduction to reading ML literature, and then applying this knowledge to deep learning and differential privacy concerns. The goal of this project is to understand deep learning models and how to protect the privacy of an individual’s data. Different algorithmic techniques for learning will be implemented on medical image datasets and an analysis of privacy costs within the framework of differential privacy will be completed to evaluate the merits and room for improvement of different techniques. This project deliverable will be a research paper summarizing the results found throughout the fall and winter semesters.
 
 ### Team Members
 
@@ -21,12 +21,15 @@ This project serves as an introduction to reading ML literature, and then applyi
 ### Contents 
 
 - Datasets:
-  - /chest-data/: gzip numpy array files, from [Chest Pneumonia X-ray images dataset](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
-  - /knee-data/: gzip numpy array files, from [Knee Osteoarthritis X-ray images dataset](https://www.kaggle.com/datasets/shashwatwork/knee-osteoarthritis-dataset-with-severity?select=auto_test)
+  - /chest-data/: gzip Numpy array files, from [Chest Pneumonia X-ray images dataset](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
+  - /knee-data/: gzip Numpy array files, from [Knee Osteoarthritis X-ray images dataset](https://www.kaggle.com/datasets/shashwatwork/knee-osteoarthritis-dataset-with-severity?select=auto_test)
 - Techniques: 
   - /DP-SGD/: Differential Privacy with Stochiastic Gradient Descent, from the paper [Abadi et al.](https://arxiv.org/pdf/1607.00133.pdf)
-  - /DP-SGD-Federated/: Differential Privacy with Stochiastic Gradient Descent and Federated Learning, referencing the paper [Wei et al.](https://ieeexplore.ieee.org/ielaam/10206/8833568/9069945-aam.pdf)
-  - /DP-SGD-JL/: Differential Privacy with Stochiastic Gradient Descent and JL Projections, from the paper [Bu et al.](https://arxiv.org/pdf/2102.03013.pdf)
+  - /DP-SGD-FL/: Differential Privacy with Stochastic Gradient Descent and Federated Learning, referencing the paper [Wei et al.](https://ieeexplore.ieee.org/ielaam/10206/8833568/9069945-aam.pdf)
+  - /DP-SGD-JL/: Differential Privacy with Stochastic Gradient Descent and JL Projections, from the paper [Bu et al.](https://arxiv.org/pdf/2102.03013.pdf)
 - Python Scripts: 
-  - load_dataset_into_pickle.py: reads directory of images, transforms the data into numpy arrays, applies data sugmentation and saves into gzip pickle files. 
-  - visualize_dataset.py: reads directory of images to create a scatter plot of image size and label distribution. 
+  - load_dataset_into_pickle.py: reads a directory of images, transforms the data into Numpy arrays, applies data segmentation and saves into gzip pickle files. 
+  - visualize_dataset.py: reads a directory of images to create a scatter plot of image size and label distribution. 
+  - metrics_calc_helper_functions.py: helper functions to calculate metrics for comparison, and to dump the data into text files. 
+- Metrics: 
+  - /metrics/: stores text files of the metrics from our techniques for both the chest and knee datasets
