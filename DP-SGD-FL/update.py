@@ -1,6 +1,9 @@
 import torch
+torch.manual_seed(0)
 from torch import nn
 import torch.nn.functional as F
+import random
+random.seed(0)
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -21,7 +24,7 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-	def __init__(self, cuda, dataset, idxs, logger, batch_size=10, lr=0.005, 
+	def __init__(self, cuda, dataset, idxs, logger, batch_size=10, lr=0.0001, 
 				 epochs=20):
 		self.logger = logger
 		self.batch_size = batch_size
@@ -56,41 +59,48 @@ class LocalUpdate(object):
 		# Set mode to train model
 		model.train()
 		epoch_loss = []
-		g = []
 
 		for iter in range(self.epochs):
 			batch_loss = []
+			num_samples = len(self.trainloader) * self.trainloader.batch_size
+			L = int(num_samples ** 0.5)
+			rand_sample = torch.multinomial(torch.ones(num_samples), L)
 
 			for batch_idx, batch in enumerate(self.trainloader):
 				images, labels = batch
+				sample_loss = []
 
-				for image, label in zip(images, labels):
+				for i, (image, label) in enumerate(zip(images, labels)):
 					image, label = image.to(self.device), label.to(self.device)
 					model.zero_grad()
 					out = model(image)
 					loss = self.criterion(out, label.unsqueeze(0))
+					sample_loss.append(loss.item())
 					loss.backward()
 
-					for param in model.parameters():
-						grad = param.grad.detach().clone()
-						# clip gradients
-						norm = torch.norm(grad)
-						g.append(norm.item())
-						grad_clipped = grad / max(1, norm / self.C)
-						# add Gaussian noise
-						grad_clipped += torch.normal(0, self.sigma, size=grad_clipped.shape)
-						# update weights
-						param.data.add_(-self.lr, grad_clipped)
+					if i in rand_sample:
+						for param in model.parameters():
+							grad = param.grad.detach().clone()
+							# clip gradients
+							norm = torch.norm(grad)
+							grad_clipped = grad / max(1, norm / self.C)
+							# add Gaussian noise
+							grad_clipped += torch.normal(0, self.sigma, size=grad_clipped.shape)
+							grad_clipped /= L
+							# update weights
+							param.data.add_(-self.lr, grad_clipped)
+					else:
+						for param in model.parameters():
+							param.data.add_(-self.lr, param.grad)
+				self.logger.add_scalar('loss', sum(sample_loss)/len(sample_loss))
+				batch_loss.append(sum(sample_loss)/len(sample_loss))
 
 				if batch_idx % 10 == 0:
 					print('| Global Round : {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
 						global_round, iter, batch_idx * len(images),
 						len(self.trainloader.dataset),
 						100. * batch_idx / len(self.trainloader), loss.item()))
-				self.logger.add_scalar('loss', loss.item())
-				batch_loss.append(loss.item())
 			epoch_loss.append(sum(batch_loss)/len(batch_loss))
-		print("***********************************************",sum(g)/len(g))
 		return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
 	def inference(self, model):
@@ -100,7 +110,7 @@ class LocalUpdate(object):
 		model.eval()
 		loss, total, correct = 0.0, 0.0, 0.0
 
-		for batch_idx, (images, labels) in enumerate(self.testloader):
+		for images, labels in self.testloader:
 			images, labels = images.to(self.device), labels.to(self.device)
 
 			# Inference
@@ -129,7 +139,7 @@ def test_inference(cuda, model, test_dataset):
 	criterion = nn.CrossEntropyLoss().to(device)
 	testloader = DataLoader(test_dataset, batch_size=128, shuffle=False)
 
-	for batch_idx, (images, labels) in enumerate(testloader):
+	for images, labels in testloader:
 		images, labels = images.to(device), labels.to(device)
 
 		# Inference

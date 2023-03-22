@@ -11,33 +11,47 @@ import pickle
 import gzip
 import os
 
-def get_dataset(iid : bool, num_users : int):
+def get_dataset(iid : bool, num_users : int, dataset : str = 'chest'):
 	""" Returns train and test datasets and a user group which is a dict where
 	the keys are the user index and the values are the corresponding data for
 	each of those users.
 	"""
-	path = 'chest-data' #os.path.join(os.path.dirname(os.getcwd()), 'chest-data')
+	path = 'chest-data' if dataset == 'chest' else 'knee-data'
 
-	with gzip.open(os.path.join(path, 'chest_x_train.gz'), 'rb') as i:
-		x_train = pickle.load(i)
-	with gzip.open(os.path.join(path, 'chest_x_val.gz'), 'rb') as i:
-		x_valid = pickle.load(i)    
-	with gzip.open(os.path.join(path, 'chest_x_test.gz'), 'rb') as i:
-		x_test = pickle.load(i)  
-	with gzip.open(os.path.join(path, 'chest_y_train.gz'), 'rb') as i:
-		y_train = pickle.load(i)  
-	with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
-		y_valid = pickle.load(i) 
-	with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
-		y_test = pickle.load(i)
+	if dataset == 'chest':
+		with gzip.open(os.path.join(path, 'chest_x_train.gz'), 'rb') as i:
+			x_train = pickle.load(i)
+		with gzip.open(os.path.join(path, 'chest_x_val.gz'), 'rb') as i:
+			x_valid = pickle.load(i)    
+		with gzip.open(os.path.join(path, 'chest_x_test.gz'), 'rb') as i:
+			x_test = pickle.load(i)  
+		with gzip.open(os.path.join(path, 'chest_y_train.gz'), 'rb') as i:
+			y_train = pickle.load(i)  
+		with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
+			y_valid = pickle.load(i) 
+		with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
+			y_test = pickle.load(i)
+	else:
+		with gzip.open(os.path.join(path, 'knee_x_train.gz'), 'rb') as i:
+			x_train = pickle.load(i)
+		with gzip.open(os.path.join(path, 'knee_x_val.gz'), 'rb') as i:
+			x_valid = pickle.load(i)    
+		with gzip.open(os.path.join(path, 'knee_x_test.gz'), 'rb') as i:
+			x_test = pickle.load(i)  
+		with gzip.open(os.path.join(path, 'knee_y_train.gz'), 'rb') as i:
+			y_train = pickle.load(i)  
+		with gzip.open(os.path.join(path, 'knee_y_val.gz'), 'rb') as i:
+			y_valid = pickle.load(i) 
+		with gzip.open(os.path.join(path, 'knee_y_test.gz'), 'rb') as i:
+			y_test = pickle.load(i)
 
 	apply_transform = None
 
-	train_dataset = ChestDataset(x_train, y_train, transform=apply_transform)
+	train_dataset = DPDataset(x_train, y_train, transform=apply_transform, dataset=dataset)
         
-	#valid_dataset = ChestDataset(x_valid, y_valid, transform=apply_transform)
+	valid_dataset = DPDataset(x_valid, y_valid, transform=apply_transform, dataset=dataset)
 
-	test_dataset = ChestDataset(x_test, y_test, transform=apply_transform)
+	test_dataset = DPDataset(x_test, y_test, transform=apply_transform, dataset=dataset)
 
 	# sample training data amongst users
 	if iid:
@@ -45,7 +59,7 @@ def get_dataset(iid : bool, num_users : int):
 	else:
 		user_groups = cifar_noniid(train_dataset, num_users)
 
-	return train_dataset, test_dataset, user_groups
+	return train_dataset, valid_dataset, test_dataset, user_groups
 
 
 def average_weights(w):
@@ -59,11 +73,12 @@ def average_weights(w):
 		w_avg[key] = torch.div(w_avg[key], len(w))
 	return w_avg
 
-class ChestDataset(Dataset):
-	def __init__(self, x, y, transform=None):
+class DPDataset(Dataset):
+	def __init__(self, x, y, transform=None, dataset='chest'):
 		self.x = x
 		self.y = y
 		self.transform = transform
+		self.dataset = dataset
 	def __len__(self):
 		return len(self.x)
 	def __getitem__(self, idx):
@@ -75,6 +90,6 @@ class ChestDataset(Dataset):
 		if self.transform:
 			image = self.transform(image)
 		image = transforms.Resize((64,64))(image)
-		label = torch.zeros(2)
+		label = torch.zeros(2) if self.dataset == 'chest' else torch.zeros(5)
 		label[self.y[idx]] = 1
 		return (image, label)
