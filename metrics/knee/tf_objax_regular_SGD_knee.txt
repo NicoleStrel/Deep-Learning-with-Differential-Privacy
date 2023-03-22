@@ -1,0 +1,3 @@
+Runtime(s): 279.8356511592865
+Peak Mem(MB): 5959.734375
+Test Accuracy: 36.9120654396728

@@ -189,12 +189,13 @@ if __name__ == '__main__':
         dump_to_pickle_files(folder_to_save, which_dataset, x_train, x_val, x_test, y_train, y_val, y_test)
 
     elif which_dataset == "knee":
+        # dataset stats: 9786 images, 3857 - normal, 1770 - doubtful, 2578 - minimal, 1286 - moderate, 295 - severe
         print("loading the knee dataset ...")
         
         classifications = ["NORMAL", "DOUBTFUL", "MINIMAL", "MODERATE", "SEVERE"]
         directory = 'knee_xray'
         folder_to_save = "knee-data-new"
-        data-augment = True
+        data_augment = True
         
         x_train, x_val, x_test, y_train, y_val, y_test = get_dataset_np_arrays(directory, classifications, size, val_split, data_augment)
         dump_to_pickle_files(folder_to_save, which_dataset, x_train, x_val, x_test, y_train, y_val, y_test)
