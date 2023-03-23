@@ -1,16 +1,58 @@
 import os
 import copy
-import time
 import numpy as np
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 from update import LocalUpdate, test_inference
 from models import CNN
 from utils import get_dataset, average_weights
+import torch.optim as optim
+import torch
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__))))
+from metrics_calc_helper_functions import *
 
+def non_federated_train(model, train_dataset):
+	model.train()
+	optimizer = optim.SGD(model.parameters(), lr=0.001)
+	train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=100 if train_dataset.dataset == 'chest' else 300, shuffle=True)
+	loss_fn = torch.nn.CrossEntropyLoss()
+	
+	for _ in tqdm(range(global_epochs)):
+		for (data, target) in train_loader:
+			optimizer.zero_grad()
+			output = model(data)
+			loss = loss_fn(output, target)
+			loss.backward()
+			optimizer.step()
+
+def federated_train(global_model):
+	global_model.train()
+	# Training
+	for epoch in tqdm(range(global_epochs)):
+		local_weights, local_losses = [], []
+		print(f'\n | Global Training Round : {epoch+1} |\n')
+
+		global_model.train()
+		m = max(int(frac * num_users), 1)
+		idxs_users = np.random.choice(range(num_users), m, replace=False)
+
+		for idx in idxs_users:
+			local_model = LocalUpdate(cuda=cuda, dataset=train_dataset, 
+					epochs=local_epochs, idxs=user_groups[idx], logger=logger,
+					batch_size=int(100/num_users) if train_dataset.dataset == 'chest' else int(300/num_users))
+			w, loss = local_model.update_weights(
+				model=copy.deepcopy(global_model), global_round=epoch)
+			local_weights.append(copy.deepcopy(w))
+			local_losses.append(copy.deepcopy(loss))
+
+		# update global weights
+		global_weights = average_weights(local_weights)
+
+		# update global weights
+		global_model.load_state_dict(global_weights)
 
 if __name__ == '__main__':
-	start_time = time.time()
 	cuda = False
 	num_users = 10
 	frac = 0.1
@@ -24,93 +66,49 @@ if __name__ == '__main__':
 	device = 'cuda' if cuda else 'cpu'
 
 	# load dataset and user groups
-	train_dataset, test_dataset, user_groups = get_dataset(iid=True, 
-														   num_users=num_users)
+	train_dataset, valid_dataset, test_dataset, user_groups = get_dataset(
+		iid=True, num_users=num_users, dataset='knee')
 
 	# BUILD MODEL
-	global_model = CNN(num_classes=2)
+	global_model = CNN(num_classes=5 if train_dataset.dataset == 'knee' else 2)
+	model = CNN(num_classes=5 if train_dataset.dataset == 'knee' else 2)
 
 	# Set the model to train and send it to device.
 	global_model.to(device)
 	global_model.train()
-	print(global_model)
+	model.to(device)
+	model.train()
 
 	# copy weights
 	global_weights = global_model.state_dict()
 
 	# Training
-	train_loss, train_accuracy = [], []
-	val_acc_list, net_list = [], []
-	cv_loss, cv_acc = [], []
-	print_every = 1
-	val_loss_pre, counter = 0, 0
+	fed_runtime, fed_peak_mem, fed_result = get_memory_usage_and_runtime(federated_train, (global_model,))
+	epsilon = get_epsilon_momentents_gaussian_dp(len(train_dataset), 4, 10, batch_size=100 if train_dataset.dataset == 'chest' else 300)
+	runtime, peak_mem, result = get_memory_usage_and_runtime(non_federated_train, (model, train_dataset))
+	# Test inference after completion of training
+	train_acc, train_loss = test_inference(cuda, global_model, train_dataset)
 
-	for epoch in tqdm(range(global_epochs)):
-		local_weights, local_losses = [], []
-		print(f'\n | Global Training Round : {epoch+1} |\n')
+	valid_acc, valid_loss = test_inference(cuda, global_model, valid_dataset)
 
-		global_model.train()
-		m = max(int(frac * num_users), 1)
-		idxs_users = np.random.choice(range(num_users), m, replace=False)
-
-		for idx in idxs_users:
-			local_model = LocalUpdate(cuda=cuda, dataset=train_dataset,
-									  idxs=user_groups[idx], logger=logger)
-			w, loss = local_model.update_weights(
-				model=copy.deepcopy(global_model), global_round=epoch)
-			local_weights.append(copy.deepcopy(w))
-			local_losses.append(copy.deepcopy(loss))
-
-		# update global weights
-		global_weights = average_weights(local_weights)
-
-		# update global weights
-		global_model.load_state_dict(global_weights)
-
-		loss_avg = sum(local_losses) / len(local_losses)
-		train_loss.append(loss_avg)
-
-		# Calculate avg training accuracy over all users at every epoch
-		list_acc, list_loss = [], []
-		global_model.eval()
-		for c in range(num_users):
-			local_model = LocalUpdate(cuda=cuda, dataset=train_dataset,
-									  idxs=user_groups[idx], logger=logger)
-			acc, loss = local_model.inference(model=global_model)
-			list_acc.append(acc)
-			list_loss.append(loss)
-		train_accuracy.append(sum(list_acc)/len(list_acc))
-
-		# print global training loss after every 'i' rounds
-		if (epoch+1) % print_every == 0:
-			print(f' \nAvg Training Stats after {epoch+1} global rounds:')
-			print(f'Training Loss : {np.mean(np.array(train_loss))}')
-			print('Train Accuracy: {:.2f}% \n'.format(100*train_accuracy[-1]))
+	fed_test_acc, test_loss = test_inference(cuda, global_model, test_dataset)
+	
+	print(f' \n Results (federated) after {global_epochs} global rounds of training:')
+	print("|---- Train Accuracy: {:.2f}%".format(100*train_acc))
+	print("|---- Validation Accuracy: {:.2f}%".format(100*valid_acc))
+	print("|---- Test Accuracy: {:.2f}%".format(100*fed_test_acc))
 
 	# Test inference after completion of training
-	test_acc, test_loss = test_inference(cuda, global_model, test_dataset)
+	train_acc, train_loss = test_inference(cuda, model, train_dataset)
 
-	print(f' \n Results after {global_epochs} global rounds of training:')
-	print("|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]))
+	valid_acc, valid_loss = test_inference(cuda, model, valid_dataset)
+
+	test_acc, test_loss = test_inference(cuda, model, test_dataset)
+	
+	print(f' \n Results (normal) after {global_epochs} rounds of training:')
+	print("|---- Train Accuracy: {:.2f}%".format(100*train_acc))
+	print("|---- Validation Accuracy: {:.2f}%".format(100*valid_acc))
 	print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
 
-	print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
-
-	# PLOTTING
-	import matplotlib.pyplot as plt
-
-	# Plot Loss curve
-	plt.figure()
-	plt.title('Training Loss vs Communication rounds')
-	plt.plot(range(len(train_loss)), train_loss, color='r')
-	plt.ylabel('Training loss')
-	plt.xlabel('Communication Rounds')
-	plt.show()
-	
-	# Plot Average Accuracy vs Communication rounds
-	plt.figure()
-	plt.title('Average Accuracy vs Communication rounds')
-	plt.plot(range(len(train_accuracy)), train_accuracy, color='b')
-	plt.ylabel('Average Accuracy')
-	plt.xlabel('Communication Rounds')
-	plt.show()
+	dump_metrics_to_json('federated_dp_knee.txt', fed_runtime, fed_peak_mem, fed_test_acc, epsilon, True)
+	dump_metrics_to_json('non_federated_knee.txt', runtime, peak_mem, test_acc)
