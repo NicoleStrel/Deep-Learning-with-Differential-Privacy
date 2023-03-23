@@ -1,4 +1,5 @@
 import numpy as np
+np.random.seed(0)
 
 def cifar_iid(dataset, num_users):
 	"""
