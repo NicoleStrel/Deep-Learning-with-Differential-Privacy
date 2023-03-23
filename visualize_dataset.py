@@ -32,15 +32,16 @@ def create_dataset_scatter(dir, img_extension, colors, plt_title):
 
 if __name__ == '__main__':
     dataset = "chest"
-    colors = ["#eb9678", "#78bdeb"]
-    img_extension = 'jpeg'
-
+    
     if (dataset == "chest"):
         print("visualizing chest datset ...")
         dir = 'chest_xray'
         plt_title = "Chest X-ray Image Size Distribution"
+        colors = ["#eb9678", "#78bdeb"]
+        img_extension = 'jpeg'
         create_dataset_scatter(dir, img_extension, colors, plt_title)
     elif (dataset == "knee"):
-        print("visualizing knee datset ...")
+        print("no visual needed for the knee dataset")
+        # no visual needed since all images are 224 x 224 pixels (the same). 
     else:
         print("choose an available dataset from: 'chest' or 'knee'")
