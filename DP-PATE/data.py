@@ -1,4 +1,3 @@
-import torch
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset
 
@@ -7,9 +6,7 @@ import numpy as np
 
 import copy
 import torch
-import torchvision.transforms as transforms
-from torch.utils.data import Dataset
-from torchvision import transforms
+from torch.utils.data import Dataset, TensorDataset
 
 import pickle
 import gzip
@@ -66,14 +63,40 @@ def load_data(train, batch_size, dataset: str):
         with gzip.open(os.path.join(path, 'knee_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
-    train_dataset = DPDataset(x_train, y_train, transform=None, dataset='chest')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # apply_transform = transforms.Compose([transforms.ToPILImage(),
+    #                                       transforms.ToTensor(),
+    #                                       transforms.Normalize((0.1307,), (0.3081,))
+    #                                       ])
 
-    valid_dataset = DPDataset(x_valid, y_valid, transform=None, dataset='chest')
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
+    # train_dataset = CustomTensorDataset([x_train, y_train], transform_list=apply_transform)
+    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    #
+    # valid_dataset = CustomTensorDataset([x_valid, y_valid], transform_list=apply_transform)
+    # valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
+    #
+    # test_dataset = CustomTensorDataset([x_test, y_test], transform_list=apply_transform)
+    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
-    test_dataset = DPDataset(x_test, y_test, transform=None, dataset='chest')
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    # -- Train data --
+    x = torch.from_numpy(x_train).view(x_train.shape[0], -1)  # convert 4d array to 2d
+    y = torch.from_numpy(y_train.flatten())  # flatten labels
+
+    train_dataset = TensorDataset(torch.tensor(x), torch.tensor(y))
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=100, shuffle=True)
+
+    # -- Validation data ---
+    x = torch.from_numpy(x_valid).view(x_valid.shape[0], -1)  # convert 4d array to 2d
+    y = torch.from_numpy(y_valid.flatten())  # flatten labels
+
+    valid_dataset = TensorDataset(torch.tensor(x), torch.tensor(y))
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=100, shuffle=True)
+
+    # -- Test data --
+    x = torch.from_numpy(x_test).view(x_test.shape[0], -1)  # convert 4d array to 2d
+    y = torch.from_numpy(y_test.flatten())  # flatten labels
+
+    test_dataset = TensorDataset(torch.tensor(x), torch.tensor(y))
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=100, shuffle=True)
 
     return train_loader, valid_loader, test_loader
 
@@ -120,25 +143,52 @@ class NoisyDataset(Dataset):
         return sample
 
 
-class DPDataset(Dataset):
-    def __init__(self, x, y, transform=None, dataset='chest'):
-        self.x = x
-        self.y = y
-        self.transform = transform
-        self.dataset = dataset
+# credit to AlecDong
+# class DPDataset(Dataset):
+#     def __init__(self, x, y, transform=None, dataset='chest'):
+#         self.x = x
+#         self.y = y
+#         self.transform = transform
+#         self.dataset = dataset
+#
+#     def __len__(self):
+#         return len(self.x)
+#
+#     def __getitem__(self, idx):
+#         if torch.is_tensor(idx):
+#             idx = idx.tolist()
+#
+#         image = self.x[idx]
+#         image = transforms.ToTensor()(image)
+#         if self.transform:
+#             image = self.transform(image)
+#         image = transforms.Resize((64, 64))(image)
+#         label = torch.zeros(2) if self.dataset == 'chest' else torch.zeros(5)
+#         label[self.y[idx]] = 1
+#         return (image, label)
 
-    def __len__(self):
-        return len(self.x)
 
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-
-        image = self.x[idx]
-        image = transforms.ToTensor()(image)
-        if self.transform:
-            image = self.transform(image)
-        image = transforms.Resize((64, 64))(image)
-        label = torch.zeros(2) if self.dataset == 'chest' else torch.zeros(5)
-        label[self.y[idx]] = 1
-        return (image, label)
+# class CustomTensorDataset(Dataset):
+#     def __init__(self, dataset, transform_list=None):
+#         [data_X, data_y] = dataset
+#         X_tensor, y_tensor = torch.tensor(data_X), torch.tensor(data_y)
+#         #X_tensor, y_tensor = Tensor(data_X), Tensor(data_y)
+#         tensors = (X_tensor, y_tensor)
+#         assert all(tensors[0].size(0) == tensor.size(0) for tensor in tensors)
+#         self.tensors = tensors
+#         self.transforms = transform_list
+#
+#     def __getitem__(self, index):
+#         x = self.tensors[0][index]
+#
+#         if self.transforms:
+#             #for transform in self.transforms:
+#             #  x = transform(x)
+#             x = self.transforms(x)
+#
+#         y = self.tensors[1][index]
+#
+#         return x, y
+#
+#     def __len__(self):
+#         return self.tensors[0].size(0)
