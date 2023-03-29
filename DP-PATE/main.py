@@ -1,7 +1,7 @@
 # Required imports
 import torch
 from teacher import Teacher
-from model import Model
+from model import CNN
 from data import load_data, NoisyDataset
 from utils import accuracy, split
 from student import Student
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     train_loader, valid_loader, test_loader = load_data(True, args.batchsize, 'chest')
 
     # Declare and train teachers on MNIST training data
-    teacher = Teacher(args, Model, n_teachers=args.n_teachers)
+    teacher = Teacher(args, CNN, n_teachers=args.n_teachers)
     teacher.train(train_loader)
 
     # Evaluate Teacher accuracy
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # Split the test data further into training and validation data for student
     train, val = split(test_loader, args.batchsize)
 
-    student = Student(args, Model())
+    student = Student(args, CNN())
     N = NoisyDataset(train, teacher.predict)
     student.train(N)
 
