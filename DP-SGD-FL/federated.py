@@ -14,7 +14,7 @@ from metrics_calc_helper_functions import *
 
 def non_federated_train(model, train_dataset):
 	model.train()
-	optimizer = optim.SGD(model.parameters(), lr=0.001)
+	optimizer = optim.SGD(model.parameters(), lr=0.01)
 	train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=100 if train_dataset.dataset == 'chest' else 300, shuffle=True)
 	loss_fn = torch.nn.CrossEntropyLoss()
 	
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 	# load dataset and user groups
 	train_dataset, valid_dataset, test_dataset, user_groups = get_dataset(
-		iid=True, num_users=num_users, dataset='knee')
+		dataset='knee', num_users=num_users, iid=True)
 
 	# BUILD MODEL
 	global_model = CNN(num_classes=5 if train_dataset.dataset == 'knee' else 2)
@@ -75,9 +75,7 @@ if __name__ == '__main__':
 
 	# Set the model to train and send it to device.
 	global_model.to(device)
-	global_model.train()
 	model.to(device)
-	model.train()
 
 	# copy weights
 	global_weights = global_model.state_dict()
@@ -110,5 +108,5 @@ if __name__ == '__main__':
 	print("|---- Validation Accuracy: {:.2f}%".format(100*valid_acc))
 	print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
 
-	dump_metrics_to_json('federated_dp_knee.txt', fed_runtime, fed_peak_mem, fed_test_acc, epsilon, True)
-	dump_metrics_to_json('non_federated_knee.txt', runtime, peak_mem, test_acc)
+	dump_metrics_to_json('federated_knee.txt', fed_runtime, fed_peak_mem, fed_test_acc*100, epsilon, True)
+	dump_metrics_to_json('non_federated_knee.txt', runtime, peak_mem, test_acc*100)
