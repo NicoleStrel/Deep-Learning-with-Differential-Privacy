@@ -1,16 +1,15 @@
-@@ -0,0 +1,36 @@
 # dp-knee-xray-images-dataset
 
 
-Data downloaded from https://www.kaggle.com/datasets/shashwatwork/knee-osteoarthritis-dataset-with-severity?select=auto_test
+Data downloaded from https://www.kaggle.com/datasets/shashwatwork/knee-osteoarthritis-dataset-with-severity
 
 **Notes:**
  - 80% train, 10% validation, 10% test data split
- - 9786 images total, 3857 - normal, 1770 - doubtful, 2578 - minimal, 1286 - moderate, 295 - severe
+ - 8260 images total, 3253 - normal, 1495 - doubtful, 2175 - minimal, 1086 - moderate, 251 - severe
  - image crops to (64, 64)
  - rgb colour mode
  - final compressed pickle file stores numpy arrays
- - does data augmentation on the train data, so that the labels are balanced. There are 7829 images in the training data.
+ - does data augmentation on the train data, so that the labels are balanced. There are 12135 images in the training data.
 
 **How to use:**
 - download the files and put them into a directory eg. 'knee-data'
