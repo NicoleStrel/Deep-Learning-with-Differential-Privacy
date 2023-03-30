@@ -13,7 +13,7 @@ import gzip
 import os
 
 
-def load_data(train, batch_size, dataset: str):
+def load_data(batch_size, dataset: str):
     """Helper function used to load the train/test data.
        Args:
            train[boolean]: Indicates whether its train/test data.
