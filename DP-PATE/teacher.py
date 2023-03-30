@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.distributions.laplace import Laplace
+from torch.distributions.normal import Normal
 # from util import accuracy
 from syft.frameworks.torch.dp import pate
 
@@ -24,7 +24,7 @@ class Teacher:
         self.models = {}
         self.args = args
         self.init_models()
-        self.epsilon = 0.5
+        self.epsilon = 0.5  # replace this with self.stdev = 4 for Gaussian Noise
 
     def init_models(self):
         """Initialize teacher models according to number of required teachers"""
@@ -44,7 +44,7 @@ class Teacher:
                 counts[torch tensor]: Noisy histogram of counts
         """
 
-        m = Laplace(torch.tensor([0.0]), torch.tensor([self.epsilon]))
+        m = Normal(torch.tensor([0.0]), torch.tensor([4.0]))
         count = x + m.sample()
 
         return count
