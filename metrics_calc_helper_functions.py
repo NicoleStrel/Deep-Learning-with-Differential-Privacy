@@ -59,6 +59,7 @@ def dump_metrics_to_json(filename, runtime, peak_mem, test_accuracy, epsilon=0, 
     @param filename (string): filename, must end with .txt
     @param runtime (float): runtime of training in seconds
     @param peak_mem (float): peak memory of training in MB
+    @param peak_mem (float): accuracy of model, in percentage form (eg. 91.23%)
     @param epsilon (float): epsilon from gaussian DP
     @param is_dp (boolean): true if the model had differential privacy incorporated
     '''
