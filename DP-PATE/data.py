@@ -62,10 +62,15 @@ def get_datasets(dataset: str):
 
 def create_dataset(x_array, y_array):
     """Helper function for get_datasets() function"""
-    x = torch.from_numpy(x_array).view(x_array.shape[0], -1)  # convert 4d array to 2d
-    y = torch.from_numpy(y_array.flatten())
+    # x = torch.from_numpy(x_array).view(x_array.shape[0], -1)  # convert 4d array to 2d
+    # x = torch.from_numpy(x_array)
+
+    # x_array in the form (N, h, w, 3), need it to be (N, 3, h, w)
+    x = torch.from_numpy(x_array).view(x_array.shape[0], x_array.shape[3], x_array.shape[1], x_array.shape[2])
+    y = torch.from_numpy(y_array.flatten()).long()
 
     return TensorDataset(x.clone().detach(), y.clone().detach())
+    # return TensorDataset(torch.tensor(x_array), torch.tensor(y_array))
 
 
 class NoisyDataset(Dataset):
@@ -108,6 +113,7 @@ class NoisyDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
+
 
 
 
