@@ -17,14 +17,15 @@ class Teacher:
            epochs[int]: Number of epochs to train each model
     """
 
-    def __init__(self, args, model, n_teachers=1, epsilon=0.5):
+    def __init__(self, args, model, num_classes, n_teachers=1, epsilon=0.5):
 
         self.n_teachers = n_teachers
         self.model = model
         self.models = {}
         self.args = args
+        self.num_classes = num_classes
         self.init_models()
-        self.epsilon = 0.5  # replace this with self.stdev = 4 for Gaussian Noise
+        self.epsilon = 4  # replace this with self.stdev = 4 for Gaussian Noise
 
     def init_models(self):
         """Initialize teacher models according to number of required teachers"""
@@ -32,7 +33,7 @@ class Teacher:
         name = "model_"
         for index in range(0, self.n_teachers):
 
-            model = self.model()
+            model = self.model(self.num_classes)
             self.models[name + str(index)] = model
 
     def addnoise(self, x):
