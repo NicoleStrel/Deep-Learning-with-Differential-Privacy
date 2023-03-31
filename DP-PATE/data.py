@@ -13,13 +13,16 @@ import gzip
 import os
 
 
-def load_data(batch_size, dataset: str):
-    """Helper function used to load the train/test data.
-       Args:
-           train[boolean]: Indicates whether its train/test data.
-           batch_size[int]: Batch size
-    """
+def load_data(train_dataset: Dataset, valid_dataset: Dataset, test_dataset: Dataset, batch_size: int):
+    """Load train data, valid data, and test data"""
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    return train_loader, valid_loader, test_loader
 
+
+def get_datasets(dataset: str):
+    """Returns train, valid and test datasets"""
     if dataset == 'chest':
         path = 'chest-data'  # os.path.join(os.path.dirname(os.getcwd()), 'chest-data')
         with gzip.open(os.path.join(path, 'chest_x_train.gz'), 'rb') as i:
@@ -34,10 +37,6 @@ def load_data(batch_size, dataset: str):
             y_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
-
-        train_loader = help_load_data(x_train, y_train, batch_size=batch_size)
-        valid_loader = help_load_data(x_valid, y_valid, batch_size=batch_size)
-        test_loader = help_load_data(x_test, y_test, batch_size=batch_size)
 
     else:
         path = 'knee-data'  # os.path.join(os.path.dirname(os.getcwd()), 'knee-data')
@@ -54,11 +53,19 @@ def load_data(batch_size, dataset: str):
         with gzip.open(os.path.join(path, 'knee_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
-        train_loader = help_load_data(x_train, y_train, batch_size=batch_size)
-        valid_loader = help_load_data(x_valid, y_valid, batch_size=batch_size)
-        test_loader = help_load_data(x_test, y_test, batch_size=batch_size)
+    train_set = create_dataset(x_train, y_train)
+    valid_set = create_dataset(x_valid, y_valid)
+    test_set = create_dataset(x_test, y_test)
 
-    return train_loader, valid_loader, test_loader
+    return train_set, valid_set, test_set
+
+
+def create_dataset(x_array, y_array):
+    """Helper function for get_datasets() function"""
+    x = torch.from_numpy(x_array).view(x_array.shape[0], -1)  # convert 4d array to 2d
+    y = torch.from_numpy(y_array.flatten())
+
+    return TensorDataset(x.clone().detach(), y.clone().detach())
 
 
 class NoisyDataset(Dataset):
@@ -103,10 +110,5 @@ class NoisyDataset(Dataset):
         return sample
 
 
-def help_load_data(x_array, y_array, batch_size):
-    x = torch.from_numpy(x_array).view(x_array.shape[0], -1)  # convert 4d array to 2d
-    y = torch.from_numpy(y_array.flatten())
 
-    dataset = TensorDataset(x.clone().detach(), y.clone().detach())
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
