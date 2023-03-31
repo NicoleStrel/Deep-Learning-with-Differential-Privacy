@@ -26,10 +26,11 @@ This project serves as an introduction to reading ML literature, and then applyi
   - `/DP-SGD/` (Tensorflow Objax): Differential Privacy with Stochiastic Gradient Descent, from the paper [Abadi et al.](https://arxiv.org/pdf/1607.00133.pdf)
   - `/DP-SGD-JL/` (Tensorflow Keras): Differential Privacy with Stochastic Gradient Descent and JL Projections, from the paper [Bu et al.](https://arxiv.org/pdf/2102.03013.pdf)
   - `/DP-SGD-FL/` (PyTorch): Differential Privacy with Stochastic Gradient Descent and Federated Learning, referencing the paper [Wei et al.](https://ieeexplore.ieee.org/ielaam/10206/8833568/9069945-aam.pdf)
-  - `/PATE/` (PyTorch PySyft): Private Aggregation of Teacher Ensembles (PATE) algorithm, from the paper [Uniyal et al.](https://arxiv.org/pdf/2106.12576.pdf)
+  - `/PATE/` (PyTorch): Private Aggregation of Teacher Ensembles (PATE) algorithm, from the paper [Uniyal et al.](https://arxiv.org/pdf/2106.12576.pdf)
 - **Python Scripts**: 
   - `load_dataset_into_pickle.py`: reads a directory of images, transforms the data into Numpy arrays, applies data segmentation and saves into gzip pickle files. 
   - `visualize_dataset.py`: reads a directory of images to create a scatter plot of image size and label distribution. 
   - `metrics_calc_helper_functions.py`: helper functions to calculate metrics for comparison, and to dump the data into text files. 
+  - `runtime_and_memory_graphs.py`: generates graphs to compare memory/runtime of all techniques for the chest and knee datasets.
 - **Metrics**: 
   - `/metrics/`: stores text files of the metrics from our techniques for both the chest and knee datasets
