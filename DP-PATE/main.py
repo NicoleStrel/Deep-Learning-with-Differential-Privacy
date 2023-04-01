@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # get epsilon
 
     # === Train CNN model with DP-PATE using chest data ===
-
+    print("Train CNN model with DP-PATE using chest data")
     c_args = ChestArguments()
 
     # Train teachers
@@ -112,10 +112,9 @@ if __name__ == '__main__':
     print("\n")
     print("\n")
 
+    # train model and get runtime, memory metrics
     student = Student(c_args, CNN(c_args.num_classes))
     N = NoisyDataset(test_loader_c, teacher.predict)
-    # c_pate_runtime, c_pate_memory, c_pate_results = get_memory_usage_and_runtime(student.train, (),
-    #                                                                              {'dataset': N})
     c_pate_runtime, c_pate_memory = get_memory_usage_and_runtime(student.train, (), {'dataset': N})
 
     results = []
@@ -131,17 +130,74 @@ if __name__ == '__main__':
 
     print("Private Baseline: ", (correct / total) * 100)
 
+    # get epsilon
     c_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_c), c_args.sigma,
                                                         c_args.student_epochs, c_args.batch_size)
 
+    # put metrics in txt file
     dump_metrics_to_json("dp_pate_chest_metrics.txt", c_pate_runtime, c_pate_memory,
                          (correct / total) * 100, c_pate_epsilon, is_dp=True)
 
     # === Train CNN model with DP-PATE using knee data ===
+    print("\nTrain CNN model with DP-PATE using knee data")
     k_args = KneeArguments()
 
-    # train model and get runtime, memory and result metrics
+    # Train teachers
+    teacher = Teacher(k_args, CNN, k_args.num_classes, n_teachers=k_args.n_teachers)
+    teacher.train(train_loader_k)
+
+    # Teacher accuracy
+    teacher_targets = []
+    predict = []
+
+    counts = []
+    original_targets = []
+
+    for data, target in test_loader_k:
+        output = teacher.predict(data)
+
+        arr_target = []
+        teacher_targets.append(target)
+        original_targets.append(target)
+        predict.append(output["predictions"])
+        counts.append(output["model_counts"])
+
+    # print("Accuracy: ", accuracy(torch.tensor(predict), teacher_targets))
+
+    print("\n")
+    print("\n")
+
+    # Training students
+    print("Training Student")
+
+    print("\n")
+    print("\n")
+
+    student = Student(k_args, CNN(k_args.num_classes))
+    N = NoisyDataset(test_loader_k, teacher.predict)
+    k_pate_runtime, k_pate_memory = get_memory_usage_and_runtime(student.train, (), {'dataset': N})
+
+    results = []
+    targets = []
+
+    total = 0.0
+    correct = 0.0
+
+    for data, target in valid_loader_k:
+        predict_lol = student.predict(data)
+        correct += float((predict_lol == (target)).sum().item())
+        total += float(target.size(0))
+
+    print("Private Baseline: ", (correct / total) * 100)
 
     # get epsilon
+    k_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_k), k_args.sigma,
+                                                        k_args.student_epochs, k_args.batch_size)
+
+    # put metrics in txt file
+    dump_metrics_to_json("dp_pate_knee_metrics.txt", k_pate_runtime, k_pate_memory,
+                         (correct / total) * 100, k_pate_epsilon, is_dp=True)
+
+
 
 
