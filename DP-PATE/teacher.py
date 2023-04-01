@@ -26,7 +26,7 @@ class Teacher:
         self.args = args
         self.num_classes = num_classes
         self.init_models()
-        self.stdev = 4  # Gaussian Noise (mean = 0, stdev = 4)
+        self.stdev = 4.0  # Gaussian Noise (mean = 0, stdev = 4)
 
     def init_models(self):
         """Initialize teacher models according to number of required teachers"""

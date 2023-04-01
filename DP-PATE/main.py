@@ -1,8 +1,8 @@
-import torch
+# import torch
 from teacher import Teacher
 from model import CNN
 from data import load_data, NoisyDataset, get_datasets
-from utils import accuracy, split
+# from utils import accuracy, split
 from student import Student
 from metrics_calc_helper_functions import get_memory_usage_and_runtime, get_epsilon_momentents_gaussian_dp, \
     dump_metrics_to_json
