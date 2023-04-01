@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions.normal import Normal
+from torch.distributions.laplace import Laplace
 # from util import accuracy
 # from syft.frameworks.torch.dp import pate
 
@@ -58,7 +59,8 @@ class Teacher:
                split: Split of dataset
         """
 
-        ratio = int(len(dataset) / self.n_teachers)
+        # ratio = int(len(dataset) / self.n_teachers)
+        ratio = 1
         iters = 0
         index = 0
         split = []
@@ -120,7 +122,10 @@ class Teacher:
             iters += 1
         # Print loss by making using of log intervals
         print("Loss")
-        print(loss.item())
+        if isinstance(loss, float):
+            print(loss)
+        else:
+            print(loss.item())
 
     def aggregate(self, model_votes, batch_size):
         """Aggregate model output into a single tensor of votes of all models.
@@ -170,15 +175,6 @@ class Teacher:
             modelA = self.model()
             self.models[path_name + str(i)] = torch.load("models/" + path_name + str(i))
             self.models[path_name + str(i)] = modelA.load_state_dict()
-
-    def analyze(self, preds, indices, moments=8):
-
-        # datadepeps, dataindeps = pate.perform_analysis_torch(
-        #     preds, indices, noise_eps=0.1, delta=self.epsilon, moments=moments, beta=0.09
-        # )
-        # return datadepeps, dataindeps
-
-        ...
 
     def predict(self, data):
         """Make predictions using Noisy-max using Laplace mechanism.

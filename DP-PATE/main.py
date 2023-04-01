@@ -11,15 +11,16 @@ from metrics_calc_helper_functions import get_memory_usage_and_runtime, get_epsi
 # chest num_classes = 2
 # knee batch_size = 300
 # knee num_classes = 3
+# for all: epochs = up to you
 
 
 class ChestArguments:
     def __init__(self):
         self.batch_size = 100
-        self.epochs = 10  # 100
-        self.student_epochs = 30  # 100
-        self.lr = 0.01  # set by base model
-        self.momentum = 0.5
+        self.epochs = 10  # epoch for teacher
+        self.student_epochs = 30  # epoch for students
+        self.lr = 0.005  # og lr=0.01; lr between 0.0-1.0
+        self.momentum = 0.0
         self.no_cuda = False  # does not seem to be used
         self.seed = 1  # does not seem to be used
         self.log_interval = 30  # does not seem to be used
@@ -33,10 +34,10 @@ class ChestArguments:
 class KneeArguments:
     def __init__(self):
         self.batch_size = 300
-        self.epochs = 100
-        self.student_epochs = 100
-        self.lr = 0.01  # set by base model
-        self.momentum = 0.5
+        self.epochs = 10  # teacher epoch
+        self.student_epochs = 30  # student epoch
+        self.lr = 0.005  # og lr=0.01; lr between 0.0-1.0
+        self.momentum = 0.0
         self.no_cuda = False  # does not seem to be used
         self.seed = 1  # does not seem to be used
         self.log_interval = 30  # does not seem to be used
@@ -57,25 +58,12 @@ if __name__ == '__main__':
     train_dataset_c, valid_dataset_c, test_dataset_c = get_datasets('chest')
     train_loader_c, valid_loader_c, test_loader_c = load_data(train_dataset_c, valid_dataset_c,
                                                               test_dataset_c, batch_size_c)
+
     # knee data
     batch_size_k = 300
-    train_dataset_k, valid_dataset_k, test_dataset_k = get_datasets('chest')
-    train_loader_k, valid_loader_k, test_loader_k = load_data(train_dataset_c, valid_dataset_c,
-                                                              test_dataset_c, batch_size_k)
-
-    # === Train Regular CNN model using chest data ===
-    # create model
-
-    # train model and get runtime, memory and result metrics
-
-    # get epsilon
-
-    # === Train Regular CNN model using knee data ===
-    # create model
-
-    # train model and get runtime, memory and result metrics
-
-    # get epsilon
+    train_dataset_k, valid_dataset_k, test_dataset_k = get_datasets('knee')
+    train_loader_k, valid_loader_k, test_loader_k = load_data(train_dataset_k, valid_dataset_k,
+                                                              test_dataset_k, batch_size_k)
 
     # === Train CNN model with DP-PATE using chest data ===
     print("Train CNN model with DP-PATE using chest data")
@@ -128,7 +116,8 @@ if __name__ == '__main__':
         correct += float((predict_lol == (target)).sum().item())
         total += float(target.size(0))
 
-    print("Private Baseline: ", (correct / total) * 100)
+    c_student_accuracy = (correct / total) * 100
+    print("Private Baseline: ", c_student_accuracy)
 
     # get epsilon
     c_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_c), c_args.sigma,
@@ -136,7 +125,7 @@ if __name__ == '__main__':
 
     # put metrics in txt file
     dump_metrics_to_json("dp_pate_chest_metrics.txt", c_pate_runtime, c_pate_memory,
-                         (correct / total) * 100, c_pate_epsilon, is_dp=True)
+                         c_student_accuracy, c_pate_epsilon, is_dp=True)
 
     # === Train CNN model with DP-PATE using knee data ===
     print("\nTrain CNN model with DP-PATE using knee data")
@@ -188,7 +177,8 @@ if __name__ == '__main__':
         correct += float((predict_lol == (target)).sum().item())
         total += float(target.size(0))
 
-    print("Private Baseline: ", (correct / total) * 100)
+    k_student_accuracy = (correct / total) * 100
+    print("Private Baseline: ", k_student_accuracy)
 
     # get epsilon
     k_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_k), k_args.sigma,
@@ -196,8 +186,5 @@ if __name__ == '__main__':
 
     # put metrics in txt file
     dump_metrics_to_json("dp_pate_knee_metrics.txt", k_pate_runtime, k_pate_memory,
-                         (correct / total) * 100, k_pate_epsilon, is_dp=True)
-
-
-
+                         k_student_accuracy, k_pate_epsilon, is_dp=True)
 
