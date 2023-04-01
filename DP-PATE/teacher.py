@@ -26,7 +26,7 @@ class Teacher:
         self.args = args
         self.num_classes = num_classes
         self.init_models()
-        self.epsilon = 4  # replace this with self.stdev = 4 for Gaussian Noise
+        self.stdev = 4  # Gaussian Noise (mean = 0, stdev = 4)
 
     def init_models(self):
         """Initialize teacher models according to number of required teachers"""
@@ -46,7 +46,7 @@ class Teacher:
                 counts[torch tensor]: Noisy histogram of counts
         """
 
-        m = Normal(torch.tensor([0.0]), torch.tensor([4.0]))
+        m = Normal(torch.tensor([0.0]), torch.tensor([self.stdev]))
         count = x + m.sample()
 
         return count
