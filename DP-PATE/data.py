@@ -12,6 +12,8 @@ import pickle
 import gzip
 import os
 
+import numpy
+
 
 def load_data(train_dataset: Dataset, valid_dataset: Dataset, test_dataset: Dataset, batch_size: int):
     """Load train data, valid data, and test data"""

@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions.normal import Normal
 # from util import accuracy
-from syft.frameworks.torch.dp import pate
+# from syft.frameworks.torch.dp import pate
 
 
 class Teacher:
@@ -173,10 +173,12 @@ class Teacher:
 
     def analyze(self, preds, indices, moments=8):
 
-        datadepeps, dataindeps = pate.perform_analysis_torch(
-            preds, indices, noise_eps=0.1, delta=self.epsilon, moments=moments, beta=0.09
-        )
-        return datadepeps, dataindeps
+        # datadepeps, dataindeps = pate.perform_analysis_torch(
+        #     preds, indices, noise_eps=0.1, delta=self.epsilon, moments=moments, beta=0.09
+        # )
+        # return datadepeps, dataindeps
+
+        ...
 
     def predict(self, data):
         """Make predictions using Noisy-max using Laplace mechanism.
