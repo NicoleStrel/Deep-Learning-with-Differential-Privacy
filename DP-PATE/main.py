@@ -127,64 +127,64 @@ if __name__ == '__main__':
     dump_metrics_to_json("dp_pate_chest_metrics.txt", c_pate_runtime, c_pate_memory,
                          c_student_accuracy, c_pate_epsilon, is_dp=True)
 
-    # # === Train CNN model with DP-PATE using knee data ===
-    # print("\nTrain CNN model with DP-PATE using knee data")
-    # k_args = KneeArguments()
-    #
-    # # Train teachers
-    # teacher = Teacher(k_args, CNN, k_args.num_classes, n_teachers=k_args.n_teachers)
-    # teacher.train(train_loader_k)
-    #
-    # # Teacher accuracy
-    # teacher_targets = []
-    # predict = []
-    #
-    # counts = []
-    # original_targets = []
-    #
-    # for data, target in test_loader_k:
-    #     output = teacher.predict(data)
-    #
-    #     arr_target = []
-    #     teacher_targets.append(target)
-    #     original_targets.append(target)
-    #     predict.append(output["predictions"])
-    #     counts.append(output["model_counts"])
-    #
-    # # print("Accuracy: ", accuracy(torch.tensor(predict), teacher_targets))
-    #
-    # print("\n")
-    # print("\n")
-    #
-    # # Training students
-    # print("Training Student")
-    #
-    # print("\n")
-    # print("\n")
-    #
-    # student = Student(k_args, CNN(k_args.num_classes))
-    # N = NoisyDataset(test_loader_k, teacher.predict)
-    # k_pate_runtime, k_pate_memory = get_memory_usage_and_runtime(student.train, (), {'dataset': N})
-    #
-    # results = []
-    # targets = []
-    #
-    # total = 0.0
-    # correct = 0.0
-    #
-    # for data, target in valid_loader_k:
-    #     predict_lol = student.predict(data)
-    #     correct += float((predict_lol == (target)).sum().item())
-    #     total += float(target.size(0))
-    #
-    # k_student_accuracy = (correct / total) * 100
-    # print("Private Baseline: ", k_student_accuracy)
-    #
-    # # get epsilon
-    # k_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_k), k_args.sigma,
-    #                                                     k_args.student_epochs, k_args.batch_size)
-    #
-    # # put metrics in txt file
-    # dump_metrics_to_json("dp_pate_knee_metrics.txt", k_pate_runtime, k_pate_memory,
-    #                      k_student_accuracy, k_pate_epsilon, is_dp=True)
+    # === Train CNN model with DP-PATE using knee data ===
+    print("\nTrain CNN model with DP-PATE using knee data")
+    k_args = KneeArguments()
+
+    # Train teachers
+    teacher = Teacher(k_args, CNN, k_args.num_classes, n_teachers=k_args.n_teachers)
+    teacher.train(train_loader_k)
+
+    # Teacher accuracy
+    teacher_targets = []
+    predict = []
+
+    counts = []
+    original_targets = []
+
+    for data, target in test_loader_k:
+        output = teacher.predict(data)
+
+        arr_target = []
+        teacher_targets.append(target)
+        original_targets.append(target)
+        predict.append(output["predictions"])
+        counts.append(output["model_counts"])
+
+    # print("Accuracy: ", accuracy(torch.tensor(predict), teacher_targets))
+
+    print("\n")
+    print("\n")
+
+    # Training students
+    print("Training Student")
+
+    print("\n")
+    print("\n")
+
+    student = Student(k_args, CNN(k_args.num_classes))
+    N = NoisyDataset(test_loader_k, teacher.predict)
+    k_pate_runtime, k_pate_memory = get_memory_usage_and_runtime(student.train, (), {'dataset': N})
+
+    results = []
+    targets = []
+
+    total = 0.0
+    correct = 0.0
+
+    for data, target in valid_loader_k:
+        predict_lol = student.predict(data)
+        correct += float((predict_lol == (target)).sum().item())
+        total += float(target.size(0))
+
+    k_student_accuracy = (correct / total) * 100
+    print("Private Baseline: ", k_student_accuracy)
+
+    # get epsilon
+    k_pate_epsilon = get_epsilon_momentents_gaussian_dp(len(test_dataset_k), k_args.sigma,
+                                                        k_args.student_epochs, k_args.batch_size)
+
+    # put metrics in txt file
+    dump_metrics_to_json("dp_pate_knee_metrics.txt", k_pate_runtime, k_pate_memory,
+                         k_student_accuracy, k_pate_epsilon, is_dp=True)
 
