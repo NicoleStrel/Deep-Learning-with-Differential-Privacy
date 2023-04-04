@@ -29,6 +29,9 @@ class Student:
         """
 
         return torch.max(self.model(data), 1)[1]
+    
+    def predict_v2(self, data):
+        return self.model(data)
 
     def train(self, dataset):
         """Function to train the student model.
@@ -37,6 +40,7 @@ class Student:
         """
 
         for epoch in range(0, self.args.student_epochs):
+            print ("student epoch: ", epoch)
             self.loop_body(dataset, epoch)
 
     def loop_body(self, dataset, epoch):
@@ -52,7 +56,8 @@ class Student:
         for (data, target) in dataset:
             optimizer.zero_grad()
             output = self.model(data)
-            loss = F.nll_loss(output, target)
+            #print ("target from teacher --> ", target)
+            loss = F.cross_entropy(output, target)
             loss.backward()
             optimizer.step()
             iters += 1

@@ -1,3 +1,5 @@
+import torch
+
 def split(dataset, batch_size, split=0.2):
     """Splits the given dataset into training/validation.
        Args:
@@ -43,3 +45,21 @@ def accuracy(predictions, dataset):
         total += len(dataset[j])
 
     return (correct / total) * 100
+
+def test_inference(student, testloader):
+    """ Returns the test accuracy
+    """
+    total, correct = 0.0, 0.0
+
+    for data, labels in testloader:
+        predictions = student.predict_v2(data)
+        _, pred_labels = torch.max(predictions, 1)
+        #print("predictions --> ", predictions)
+        #print ("pred labels --->", type(pred_labels), pred_labels)
+        #print ("labels --->", type(labels), labels)
+
+        correct += torch.sum(torch.eq(pred_labels, labels)).item()
+        total += len(labels)
+
+    accuracy = correct/total
+    return accuracy

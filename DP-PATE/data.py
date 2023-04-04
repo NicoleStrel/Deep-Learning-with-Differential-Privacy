@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 # import copy
 import torch
 from torch.utils.data import Dataset, TensorDataset
-
+from sklearn.model_selection import train_test_split
 import pickle
 import gzip
 import os
@@ -33,8 +33,8 @@ def get_datasets(dataset: str):
             x_test = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_y_train.gz'), 'rb') as i:
             y_train = pickle.load(i)
-        with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
-            y_valid = pickle.load(i)
+        # with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
+        #     y_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
@@ -48,22 +48,25 @@ def get_datasets(dataset: str):
             x_test = pickle.load(i)
         with gzip.open(os.path.join(path, 'knee_y_train.gz'), 'rb') as i:
             y_train = pickle.load(i)
-        with gzip.open(os.path.join(path, 'knee_y_val.gz'), 'rb') as i:
-            y_valid = pickle.load(i)
+        # with gzip.open(os.path.join(path, 'knee_y_val.gz'), 'rb') as i:
+        #     y_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'knee_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
-    train_set = create_dataset(x_train, y_train)
-    valid_set = create_dataset(x_valid, y_valid)
+
+    x_train_1, x_train_2, y_train_1, y_train_2 = train_test_split(x_train, y_train, test_size=0.20, random_state=42)
+
+    train_teacher = create_dataset(x_train_1, y_train_1) # assume this data is sensitive 
+    train_student = create_dataset(x_train_2, y_train_2) # assume this data has no labels (differentially private)
     test_set = create_dataset(x_test, y_test)
 
-    return train_set, valid_set, test_set
+    return train_teacher, train_student, test_set
 
 
 def create_dataset(x_array, y_array):
     """Helper function for get_datasets() function"""
     # x_array in the form (N, h, w, 3), need it to be (N, 3, h, w)
-    x = torch.from_numpy(x_array).view(x_array.shape[0], x_array.shape[3], x_array.shape[1], x_array.shape[2])
+    x = torch.from_numpy(x_array / 255).view(x_array.shape[0], x_array.shape[3], x_array.shape[1], x_array.shape[2])
     y = torch.from_numpy(y_array.flatten()).long()
 
     return TensorDataset(x.clone().detach(), y.clone().detach())
@@ -109,8 +112,3 @@ class NoisyDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
-
-
-
-
-

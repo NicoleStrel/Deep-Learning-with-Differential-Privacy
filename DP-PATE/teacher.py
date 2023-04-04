@@ -38,12 +38,11 @@ class Teacher:
             self.models[name + str(index)] = model
 
     def addnoise(self, x):
-        """Adds Laplacian noise to histogram of counts
+        """Adds Gaussian noise to histogram of counts
            Args:
-                counts[torch tensor]: Histogram counts
-                epsilon[integer]:Amount of Noise
+                x [torch tensor]: histogram of counts 
            Returns:
-                counts[torch tensor]: Noisy histogram of counts
+                count[torch tensor]: Noisy histogram of counts
         """
 
         m = Normal(torch.tensor([0.0]), torch.tensor([self.stdev]))
@@ -116,7 +115,7 @@ class Teacher:
         for (data, target) in split:
             optimizer.zero_grad()
             output = model(data)
-            loss = F.nll_loss(output, target)
+            loss = F.cross_entropy(output, target)
             loss.backward()
             optimizer.step()
             iters += 1
@@ -136,7 +135,7 @@ class Teacher:
                 counts: Torch tensor with counts across all models
            """
 
-        counts = torch.zeros([batch_size, 10])
+        counts = torch.zeros([batch_size, self.args.num_classes])
         model_counts = torch.zeros([self.args.n_teachers, batch_size])
         model_index = 0
 
@@ -177,7 +176,7 @@ class Teacher:
             self.models[path_name + str(i)] = modelA.load_state_dict()
 
     def predict(self, data):
-        """Make predictions using Noisy-max using Laplace mechanism.
+        """Make predictions using Noisy-max using Gaussian mechanism.
            Args:
                 data: Data for which predictions are to be made
            Returns:
