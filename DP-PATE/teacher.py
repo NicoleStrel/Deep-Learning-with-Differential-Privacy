@@ -2,9 +2,6 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions.normal import Normal
-from torch.distributions.laplace import Laplace
-# from util import accuracy
-# from syft.frameworks.torch.dp import pate
 
 
 class Teacher:
@@ -13,12 +10,15 @@ class Teacher:
        The ensemble of teachers are further used to label unlabelled public data on which the student is
        trained.
        Args:
-           args[Arguments object]: An object of Arguments class with required hyperparameters
-           n_teachers[int]: Number of teachers
-           epochs[int]: Number of epochs to train each model
+           n_teachers (int): Number of teachers
+           model (CNN): CNN model class
+           models [dict]: dictionary of all the teacher models
+           args (Arguments object): An object of Arguments class with required hyperparameters
+           num_classes (int): the number of classes for the model
+           stdev (int): scale for the Normal (Gaussian) distribution
     """
 
-    def __init__(self, args, model, num_classes, n_teachers=1, epsilon=0.5):
+    def __init__(self, args, model, num_classes, n_teachers=1, stdev=1):
 
         self.n_teachers = n_teachers
         self.model = model
@@ -26,7 +26,7 @@ class Teacher:
         self.args = args
         self.num_classes = num_classes
         self.init_models()
-        self.stdev = 4.0  # Gaussian Noise (mean = 0, stdev = 4)
+        self.sigma = stdev  # Gaussian Noise
 
     def init_models(self):
         """Initialize teacher models according to number of required teachers"""
@@ -40,12 +40,12 @@ class Teacher:
     def addnoise(self, x):
         """Adds Gaussian noise to histogram of counts
            Args:
-                x [torch tensor]: histogram of counts 
+                x (torch tensor): histogram of counts
            Returns:
-                count[torch tensor]: Noisy histogram of counts
+                count (torch tensor): Noisy histogram of counts
         """
 
-        m = Normal(torch.tensor([0.0]), torch.tensor([self.stdev]))
+        m = Normal(torch.tensor([0.0]), torch.tensor([self.sigma]))
         count = x + m.sample()
 
         return count
@@ -53,12 +53,11 @@ class Teacher:
     def split(self, dataset):
         """Function to split the dataset into non-overlapping subsets of the data
            Args:
-               dataset[torch tensor]: The dataset in the form of (image,label)
+               dataset (torch tensor): The dataset in the form of (image,label)
            Returns:
                split: Split of dataset
         """
 
-        # ratio = int(len(dataset) / self.n_teachers)
         ratio = 1
         iters = 0
         index = 0
@@ -70,7 +69,7 @@ class Teacher:
             split.append([])
 
         for (data, target) in dataset:
-            if (iters) % ratio == 0 and iters != 0:
+            if iters % ratio == 0 and iters != 0:
 
                 index += 1
 
@@ -85,7 +84,7 @@ class Teacher:
     def train(self, dataset):
         """Function to train all teacher models.
            Args:
-                dataset[torch tensor]: Dataset used to train teachers in format (image,label)
+                dataset (torch tensor): Dataset used to train teachers in format (image,label)
         """
 
         split = self.split(dataset)
@@ -97,15 +96,14 @@ class Teacher:
 
                 print("TRAINING ", model_name)
                 print("EPOCH: ", epoch)
-                self.loop_body(split[index], model_name, 1)
+                self.loop_body(split[index], model_name)
                 index += 1
 
-    def loop_body(self, split, model_name, epoch):
+    def loop_body(self, split, model_name):
         """Body of the training loop.
            Args:
                split: Split of the dataset which the model has to train.
                model_name: Name of the model.
-               epoch: Epoch for which the model is being trained.
         """
 
         model = self.models[model_name]
@@ -133,6 +131,7 @@ class Teacher:
                 batch_size: Number of datapoints
            Returns:
                 counts: Torch tensor with counts across all models
+                model_counts: Torch tensor with counts of each model
            """
 
         counts = torch.zeros([batch_size, self.args.num_classes])
@@ -171,16 +170,16 @@ class Teacher:
 
         for i in range(0, self.args.n_teachers):
 
-            modelA = self.model()
+            model_a = self.model()
             self.models[path_name + str(i)] = torch.load("models/" + path_name + str(i))
-            self.models[path_name + str(i)] = modelA.load_state_dict()
+            self.models[path_name + str(i)] = model_a.load_state_dict()
 
     def predict(self, data):
         """Make predictions using Noisy-max using Gaussian mechanism.
            Args:
                 data: Data for which predictions are to be made
            Returns:
-                predictions: Predictions for the data
+                output: Predictions for the data
         """
 
         model_predictions = {}
@@ -200,7 +199,6 @@ class Teacher:
         predictions = []
 
         for batch in counts:
-            # predictions.append(torch.tensor(batch.max(dim=0)[1].long()).clone().detach())
             predictions.append(batch.max(dim=0)[1].long().clone().detach())
 
         output = {"predictions": predictions, "counts": counts, "model_counts": model_counts}

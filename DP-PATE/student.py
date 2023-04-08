@@ -9,8 +9,8 @@ class Student:
        The teacher ensembles were trained using sensitive data. The student model is further
        used to make predictions on public data.
        Args:
-           args[Arguments obj]: Object of arguments class used to control hyperparameters
-           model[torch model]: Model of Student
+           args (Arguments obj): Object of arguments class used to control hyperparameters
+           model (torch model): CNN Model of Student
     """
 
     def __init__(self, args, model):
@@ -22,25 +22,31 @@ class Student:
         """Function which accepts unlabelled public data and labels it using
            teacher's model.
            Args:
-               model[torch model]: Teachers model
-               data [torch tensor]: Public unlabelled data
+               data (torch tensor): Public unlabelled data
            Returns:
-               dataset[Torch tensor]: Labelled public dataset
+               dataset (Torch tensor): Labelled public dataset
         """
 
         return torch.max(self.model(data), 1)[1]
     
     def predict_v2(self, data):
+        """Function which accepts unlabelled public data and labels it using
+           teacher's model.
+           Args:
+               data (torch tensor): Public unlabelled data
+           Returns:
+               dataset (Torch tensor): Labelled public dataset
+        """
         return self.model(data)
 
     def train(self, dataset):
         """Function to train the student model.
            Args:
-               dataset[torch dataset]: Dataset using which model is trained.
+               dataset (torch dataset): Dataset using which model is trained.
         """
 
         for epoch in range(0, self.args.student_epochs):
-            print ("student epoch: ", epoch)
+            print("student epoch: ", epoch)
             self.loop_body(dataset, epoch)
 
     def loop_body(self, dataset, epoch):
@@ -56,7 +62,6 @@ class Student:
         for (data, target) in dataset:
             optimizer.zero_grad()
             output = self.model(data)
-            #print ("target from teacher --> ", target)
             loss = F.cross_entropy(output, target)
             loss.backward()
             optimizer.step()

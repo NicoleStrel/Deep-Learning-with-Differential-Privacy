@@ -1,7 +1,6 @@
 import time
 from memory_profiler import memory_usage
 from tensorflow_privacy.privacy.analysis import compute_dp_sgd_privacy_lib
-# from tensorflow_privacy.privacy.analysis import compute_dp_sgd_privacy
 
 # written by Nicole Streltsov, Ritvik Jayanthi and Akriti Sharma March 2023
 
@@ -20,7 +19,6 @@ def get_memory_usage_and_runtime(train_function, arguments, kwarguments):
     """
 
     s = time.time()
-    # mem, result = memory_usage((train_function, arguments), retval=True)
     mem = memory_usage(proc=(train_function, arguments, kwarguments))
     e = time.time()
     runtime = e-s
@@ -32,13 +30,13 @@ def get_memory_usage_and_runtime(train_function, arguments, kwarguments):
 
 def get_epsilon_momentents_gaussian_dp(num_train_data, noise_multiplier, num_epochs, batch_size):
     """
-    calculates epsilon (ε) of the differentially private model. The model is said to be ε-differentially private if the model cannot differentiate
-    between two datasets that differ by one point.
+    calculates epsilon (ε) of the differentially private model. The model is said to be ε-differentially private if
+    the model cannot differentiate between two datasets that differ by one point.
 
     @param num_train_data : (int) the number of training examples
-    @param noise_multiplier : (double)standard deviation of the gaussian noise added to the gradients
+    @param noise_multiplier : (double) standard deviation of the gaussian noise added to the gradients
     @param num_epochs : (int) number of epochs the model ran for
-    @param batch_size : (int)batch size used
+    @param batch_size : (int) batch size used
     @returns epsilon : (int) epsilon value
 
     NOTE - to disable warning messages add this:
@@ -62,6 +60,7 @@ def dump_metrics_to_json(filename, runtime, peak_mem, test_accuracy, epsilon=0, 
     """
     dumps all the metrics from the model to a text file with the name filename
 
+    @param test_accuracy: (float) student test accuracy
     @param filename : (string) filename, must end with .txt
     @param runtime : (float) runtime of training in seconds
     @param peak_mem : (float) peak memory of training in MB
@@ -71,7 +70,8 @@ def dump_metrics_to_json(filename, runtime, peak_mem, test_accuracy, epsilon=0, 
 
     if is_dp:
         privacy_utility = epsilon/test_accuracy
-        metrics = f"Runtime(s): {runtime}\nPeak Mem(MB): {peak_mem}\nTest Accuracy: {test_accuracy}\nEpsilon: {epsilon}\nUtility: {privacy_utility}"
+        metrics = f"Runtime(s): {runtime}\nPeak Mem(MB): {peak_mem}\nTest Accuracy: {test_accuracy}\nEpsilon: " \
+                  f"{epsilon}\nUtility: {privacy_utility}"
     else:
         metrics = f"Runtime(s): {runtime}\nPeak Mem(MB): {peak_mem}\nTest Accuracy: {test_accuracy}"
 

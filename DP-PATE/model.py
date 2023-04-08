@@ -9,8 +9,8 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, 3)
         self.conv2 = nn.Conv2d(64, 32, 3)
-        self.fc1 = nn.Linear(32 * 14 * 14, 64*num_classes)
-        self.fc2 = nn.Linear(64*num_classes, num_classes)
+        self.fc1 = nn.Linear(32 * 14 * 14, 64 * num_classes)
+        self.fc2 = nn.Linear(64 * num_classes, num_classes)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
