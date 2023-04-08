@@ -25,14 +25,10 @@ def get_datasets(dataset: str):
         path = 'chest-data'  # os.path.join(os.path.dirname(os.getcwd()), 'chest-data')
         with gzip.open(os.path.join(path, 'chest_x_train.gz'), 'rb') as i:
             x_train = pickle.load(i)
-        # with gzip.open(os.path.join(path, 'chest_x_val.gz'), 'rb') as i:
-        #     x_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_x_test.gz'), 'rb') as i:
             x_test = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_y_train.gz'), 'rb') as i:
             y_train = pickle.load(i)
-        # with gzip.open(os.path.join(path, 'chest_y_val.gz'), 'rb') as i:
-        #     y_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'chest_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
@@ -40,14 +36,10 @@ def get_datasets(dataset: str):
         path = 'knee-data'  # os.path.join(os.path.dirname(os.getcwd()), 'knee-data')
         with gzip.open(os.path.join(path, 'knee_x_train.gz'), 'rb') as i:
             x_train = pickle.load(i)
-        # with gzip.open(os.path.join(path, 'knee_x_val.gz'), 'rb') as i:
-        #     x_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'knee_x_test.gz'), 'rb') as i:
             x_test = pickle.load(i)
         with gzip.open(os.path.join(path, 'knee_y_train.gz'), 'rb') as i:
             y_train = pickle.load(i)
-        # with gzip.open(os.path.join(path, 'knee_y_val.gz'), 'rb') as i:
-        #     y_valid = pickle.load(i)
         with gzip.open(os.path.join(path, 'knee_y_test.gz'), 'rb') as i:
             y_test = pickle.load(i)
 
