@@ -4,7 +4,7 @@
 
 ### Objective
 
-This project serves as an introduction to reading ML literature, and then applying this knowledge to deep learning and differential privacy concerns. The goal of this project is to understand deep learning models and how to protect the privacy of an individual’s data. Different algorithmic techniques for learning will be implemented on medical image datasets and an analysis of privacy costs within the framework of differential privacy will be completed to evaluate the merits and room for improvement of different techniques. This project deliverable will be a research paper summarizing the results found throughout the fall and winter semesters.
+This project serves as an introduction to reading ML literature, and then applying this knowledge to deep learning and differential privacy concerns. The goal of this project is to understand deep learning models and how to protect the privacy of an individual’s data. Different algorithmic techniques for learning was implemented on medical image datasets and an analysis of privacy costs within the framework of differential privacy was be completed to evaluate the merits and room for improvement of different techniques. This project's deliverable was a research paper summarizing the results found throughout the fall and winter semesters. The paper can be found [here](https://drive.google.com/file/d/1H2zyOLYErm9dZ7LU9Tj21nIm9SsoQdVo/view?usp=sharing).
 
 ### Team Members
 
